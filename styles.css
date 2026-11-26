@@ -4,7 +4,7 @@
 
 @font-face {
   font-family: "Noto Sans SC";
-  src: url("fonts/noto-sans-sc-subset.woff2") format("woff2");
+  src: url("noto-sans-sc-subset.woff2") format("woff2");
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
@@ -12,7 +12,7 @@
 
 @font-face {
   font-family: "Noto Serif SC";
-  src: url("fonts/noto-serif-sc-subset.woff2") format("woff2");
+  src: url("noto-serif-sc-subset.woff2") format("woff2");
   font-style: normal;
   font-weight: 600;
   font-display: swap;

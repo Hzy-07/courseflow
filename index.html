@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3efe6">
+  <meta name="description" content="课序：按教学周和上课时间动态查看课程、教室、教师与每周节奏。">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="课序">
+  <title>课序 · 我的课程表</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="noto-sans-sc-subset.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="noto-serif-sc-subset.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    // 主题在首屏绘制前确定，避免闪白。
+    try {
+      const saved = JSON.parse(localStorage.getItem('courseflow.settings.v1') || 'null');
+      if (saved && saved.theme === 'dark') {
+        document.documentElement.dataset.theme = 'dark';
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) themeMeta.setAttribute('content', '#121712');
+      }
+    } catch (_) {}
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到课表</a>
+
+  <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.35 4.15L17.5 8.5l-4.15 1.35L12 14l-1.35-4.15L6.5 8.5l4.15-1.35L12 3Z"/><path d="m19 14 .8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14Z"/><path d="m5 14 .55 1.45L7 16l-1.45.55L5 18l-.55-1.45L3 16l1.45-.55L5 14Z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M17 18a5 5 0 0 0-10 0M12 2v7M4.22 10.22l1.42 1.42M1 18h2M21 18h2M18.36 11.64l1.42-1.42M23 22H1M8 6l4-4 4 4"/></symbol>
+  </svg>
+
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="课序首页">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40">
+            <rect class="mark-bg" width="40" height="40" rx="13"/>
+            <path class="mark-line" d="M11 14h18M11 20h11M11 26h14"/>
+            <circle class="mark-dot" cx="28" cy="25" r="3.2"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-name">课序</span>
+          <span class="brand-en">COURSEFLOW</span>
+        </span>
+      </a>
+
+      <nav class="main-nav" aria-label="主要导航">
+        <button class="nav-link is-active" id="navWeek" type="button" aria-current="page">周课表</button>
+        <button class="nav-link" id="navCourses" type="button" aria-haspopup="dialog">课程清单 <span class="nav-count" id="navCourseCount">16</span></button>
+      </nav>
+
+      <div class="top-actions">
+        <button class="term-pill" id="termPill" type="button" title="修改学期设置">
+          <span class="term-dot" aria-hidden="true"></span>
+          <span class="term-pill-text" id="termPillText">2026 秋季学期</span>
+        </button>
+        <button class="icon-button" id="themeButton" type="button" aria-label="切换深色外观" title="切换深浅外观">
+          <svg class="icon theme-icon theme-icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+          <svg class="icon theme-icon theme-icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+        </button>
+        <button class="icon-button" id="settingsButton" type="button" aria-label="打开课表设置" title="课表设置">
+          <svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="pageTitle">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span class="eyebrow-mark" aria-hidden="true"></span>
+            <span id="todayText">2026年11月26日 · 星期四</span>
+            <span class="eyebrow-separator" aria-hidden="true">/</span>
+            <span id="termText">2026 秋季学期</span>
+          </p>
+          <div class="hero-headline">
+            <h1 id="pageTitle">第 <span class="week-digits" id="weekDigits">12</span> 周</h1>
+            <span class="week-status is-live" id="weekStatus"><i aria-hidden="true"></i><span>本周进行中</span></span>
+          </div>
+          <p class="hero-meta">
+            <span id="weekRange">11月23日 — 11月29日</span>
+            <span class="meta-dot" aria-hidden="true"></span>
+            <span id="weekSummary">共 13 次课 · 28 节</span>
+          </p>
+          <p class="sr-only" id="weekAnnouncement" aria-live="polite"></p>
+        </div>
+
+        <div class="hero-actions">
+          <button class="today-button" id="todayButton" type="button">
+            <svg class="icon" aria-hidden="true"><use href="#i-target"/></svg>
+            <span>今天</span>
+          </button>
+          <div class="week-stepper" aria-label="教学周切换">
+            <button class="stepper-button" id="prevWeek" type="button" aria-label="上一周">
+              <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+            </button>
+            <button class="week-jump" id="weekJump" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="weekPopover">
+              <span>第 12 周</span>
+              <svg class="icon chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </button>
+            <button class="stepper-button" id="nextWeek" type="button" aria-label="下一周">
+              <svg class="icon" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div class="workspace">
+        <section class="calendar-card" id="calendarCard" aria-labelledby="calendarTitle">
+          <header class="calendar-head">
+            <div>
+              <p class="section-eyebrow">WEEK AT A GLANCE</p>
+              <div class="calendar-title-row">
+                <h2 id="calendarTitle">一周课程</h2>
+                <span class="calendar-week" id="calendarWeek">第 12 周</span>
+              </div>
+            </div>
+            <div class="calendar-metrics" aria-label="本周概览">
+              <span class="metric-pill"><i class="metric-dot" aria-hidden="true"></i><span id="metricDays">5 天有课</span></span>
+              <span class="metric-pill" id="metricCourses">11 门课程</span>
+            </div>
+          </header>
+
+          <div class="calendar-body">
+            <div class="mobile-days" id="mobileDays" role="tablist" aria-label="选择星期"></div>
+            <div class="week-viewport" id="weekViewport">
+              <div class="week-grid" id="weekGrid"></div>
+              <div class="empty-week" id="emptyWeek" hidden>
+                <div class="empty-week-card">
+                  <span class="empty-orbit" aria-hidden="true"><i></i></span>
+                  <p class="section-eyebrow">A WEEK OFF</p>
+                  <h3>这一周留白了</h3>
+                  <p>第 <span id="emptyWeekNumber">17</span> 周暂无课程安排，可以提前安排自习，也可以好好休息。</p>
+                  <button class="text-button" id="emptyCoursesButton" type="button">看看课程清单 <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></button>
+                </div>
+              </div>
+            </div>
+            <div class="mobile-agenda" id="mobileAgenda" role="tabpanel" aria-label="当日课程"></div>
+          </div>
+
+          <footer class="calendar-foot">
+            <span class="foot-hint"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>点击课程查看完整安排 · 上课时间可在设置调整</span>
+            <span class="key-hint"><kbd>←</kbd><kbd>→</kbd> 切换周次 <span class="key-separator">·</span> <kbd>/</kbd> 搜索课程</span>
+          </footer>
+        </section>
+
+        <aside class="side-column" aria-label="本周侧栏">
+          <section class="panel-card day-panel" aria-labelledby="dayTitle">
+            <header class="panel-head">
+              <div>
+                <p class="section-eyebrow" id="dayEyebrow">THURSDAY · WEEK 12</p>
+                <h2 id="dayTitle">周四 · 11月26日</h2>
+              </div>
+              <span class="day-count" id="dayCount">2 次课</span>
+            </header>
+            <div class="day-list" id="dayList"></div>
+            <button class="today-return" id="sideToday" type="button" hidden>
+              回到今天
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
+            </button>
+          </section>
+
+          <section class="panel-card rhythm-panel" aria-labelledby="rhythmTitle">
+            <header class="panel-head panel-head-compact">
+              <div>
+                <p class="section-eyebrow">WEEKLY RHYTHM</p>
+                <h2 id="rhythmTitle">本周节奏</h2>
+              </div>
+              <span class="rhythm-total" id="rhythmTotal">28 节</span>
+            </header>
+            <div class="rhythm-chart" id="rhythmChart"></div>
+            <p class="rhythm-note" id="rhythmNote">周三是本周高峰，共 9 节。</p>
+          </section>
+
+          <section class="semester-card" aria-labelledby="semesterTitle">
+            <div class="semester-top">
+              <span class="semester-kicker" id="semesterTitle">SEMESTER</span>
+              <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg>
+            </div>
+            <div class="semester-figure">
+              <strong id="semesterWeek">12</strong>
+              <span>/ <span id="semesterMax">19</span> 周</span>
+            </div>
+            <p class="semester-term" id="semesterTerm">2026 秋季学期</p>
+            <div class="progress-track" aria-hidden="true"><span id="semesterProgress"></span></div>
+            <div class="semester-foot">
+              <span id="semesterPercent">已走过 63%</span>
+              <span id="semesterRemain">还剩 7 周</span>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="site-footer">
+        <p><span class="footer-mark" aria-hidden="true"></span><span>课程数据整理自课表截图 · 上课时间 <span id="footerTimeRange">08:00–22:10</span>，可在设置中调整</span></p>
+        <button class="footer-link" id="footerSettings" type="button">
+          学期基准：<span id="footerStartDate">2026.09.07</span>
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>
+        </button>
+      </footer>
+    </main>
+  </div>
+
+  <div class="week-popover" id="weekPopover" role="dialog" aria-modal="false" aria-labelledby="weekPopoverTitle" hidden>
+    <div class="popover-head">
+      <div>
+        <strong id="weekPopoverTitle">跳转教学周</strong>
+        <span>本学期共 19 周</span>
+      </div>
+      <button class="small-icon-button" id="closeWeekPopover" type="button" aria-label="关闭周次选择">
+        <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+      </button>
+    </div>
+    <div class="week-picker" id="weekPicker" role="listbox" aria-label="选择教学周"></div>
+    <div class="popover-legend">
+      <span><i class="legend-current"></i>当前周</span>
+      <span><i class="legend-empty"></i>无课</span>
+    </div>
+  </div>
+
+  <dialog class="app-dialog settings-dialog" id="settingsDialog" aria-labelledby="settingsTitle">
+    <div class="dialog-head">
+      <div>
+        <p class="section-eyebrow">PREFERENCES</p>
+        <h2 id="settingsTitle">课表设置</h2>
+      </div>
+      <button class="small-icon-button dialog-close" type="button" data-close-dialog="settingsDialog" aria-label="关闭设置">
+        <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+      </button>
+    </div>
+    <form class="settings-form" id="settingsForm" novalidate>
+      <div class="field-group">
+        <label class="field" for="termNameInput">
+          <span class="field-label">学期名称</span>
+          <input id="termNameInput" name="termName" type="text" maxlength="24" autocomplete="off" placeholder="例如：2026 秋季学期">
+        </label>
+        <label class="field" for="startDateInput">
+          <span class="field-label">第 1 周周一</span>
+          <input id="startDateInput" name="startDate" type="date" required>
+          <span class="field-help">用于计算当前教学周。若选择其他星期，会自动对齐到所在周的周一。</span>
+        </label>
+      </div>
+      <div class="settings-preview" id="settingsPreview">
+        <span class="preview-icon"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg></span>
+        <div>
+          <strong id="previewWeekLabel">按此日期，今天是第 12 周</strong>
+          <p id="previewDateLabel">学期范围：2026.09.07 — 2027.01.17</p>
+        </div>
+      </div>
+
+      <details class="time-settings" id="timeSettings">
+        <summary>
+          <span class="time-settings-title">
+            <span class="field-label">上课时间</span>
+            <span class="time-settings-help">展开后可逐节调整</span>
+          </span>
+          <span class="time-settings-aside">
+            <span id="timeSummaryRange">08:00–22:10</span>
+            <svg class="icon time-chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+          </span>
+        </summary>
+        <div class="time-editor">
+          <div class="time-grid" id="timeGrid"></div>
+          <div class="time-editor-foot">
+            <span>默认每节 45 分钟、课间 10 分钟。</span>
+            <button class="text-button" id="resetTimes" type="button">恢复默认时间</button>
+          </div>
+        </div>
+      </details>
+
+      <div class="settings-note">
+        <svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>
+        <p>课程覆盖第 2–19 周。默认以 <strong>2026 年 9 月 7 日</strong> 作为第 1 周周一；如果作息或开学时间不同，都可以在这里调整。</p>
+      </div>
+    </form>
+    <div class="dialog-actions settings-actions">
+      <button class="text-button reset-button" id="resetSettings" type="button">恢复默认</button>
+      <div class="dialog-action-group">
+        <button class="secondary-button" type="button" data-close-dialog="settingsDialog">取消</button>
+        <button class="primary-button" type="submit" form="settingsForm">保存设置</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="app-dialog catalog-dialog" id="catalogDialog" aria-labelledby="catalogTitle">
+    <div class="dialog-head catalog-head">
+      <div>
+        <p class="section-eyebrow">ALL COURSES</p>
+        <div class="dialog-title-row">
+          <h2 id="catalogTitle">课程清单</h2>
+          <span class="catalog-summary" id="catalogSummary">16 门课程 · 23 个时段</span>
+        </div>
+      </div>
+      <button class="small-icon-button dialog-close" type="button" data-close-dialog="catalogDialog" aria-label="关闭课程清单">
+        <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+      </button>
+    </div>
+    <div class="catalog-toolbar">
+      <label class="search-field" for="courseSearch">
+        <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+        <input id="courseSearch" type="search" placeholder="搜索课程、老师或教室" autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+      <span class="search-count" id="searchCount">16 门课程</span>
+    </div>
+    <div class="catalog-list" id="courseCatalog"></div>
+    <div class="catalog-foot">
+      <span class="foot-hint"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>点击任意课程查看全部上课安排</span>
+      <span>按 <kbd>Esc</kbd> 关闭</span>
+    </div>
+  </dialog>
+
+  <dialog class="app-dialog detail-dialog" id="detailDialog" aria-labelledby="detailTitle">
+    <div id="detailContent"></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <noscript>
+    <div class="noscript-note">这个课表 App 需要启用 JavaScript 来切换周次和展示课程。</div>
+  </noscript>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
